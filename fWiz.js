@@ -8,11 +8,18 @@ var colors;
 var u_ColorLoc;
 
 // Move base variables
-var go = 0;
-var xMove = 0.0;
+//var go = 0;
+var xFrogMove = 0.0;
 var u_xMoveLoc;
-var xBase = 0.0;
+var xFrogCenter = 0.0;
 
+var xGood = 0.0;
+var yGood = 0.0;
+var xBad = 0.0;
+var yBad = 0.0;
+
+var Score;
+var currentScore; 
 // bullet variables
 var shoot  = false;
 var yBase = 0.0;
@@ -20,25 +27,34 @@ var bullVelocity = 0.01;
 var numBullets = 100;
 var bulletStat;
 
+var Rules;
+var StartButton;
+
 // bounce invader
 var xVelocity, yVelocity;
 var xCenter, yCenter;
+var xFrogCenter, yFrogCenter;
 var u_vCenterLoc;
 
 var GameOver = false;
 
 window.onload = function init(){
     var canvas = document.getElementById( "gl-canvas" );
-    bulletStat = document.getElementById("bulletStat");
+    Score = document.getElementById("Score");
+    Rules = document.getElementById("Rules");
+	StartButton = document.getElementById("Start");
+
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     setup();
 
+    currentScore = 0;
+
     //  Configure WebGL
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.9, 0.9, 0.9, 1.0 );
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
     //  Load shaders and initialize attribute buffers
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
@@ -62,7 +78,16 @@ window.onload = function init(){
     // associate invader center with uniform shader variable
     u_vCenterLoc = gl.getUniformLocation (program, "u_vCenter");
 
-    render();
+    moveFrog();
+
+    document.getElementById("Start").onclick = function() {
+    	render();
+    	Rules.innerHTML = "";
+    	StartButton.style.visibility = "hidden";
+	}
+
+	Start();
+
 }
 
 function setup(){
@@ -80,8 +105,8 @@ function setup(){
         vertices[0][1] + r*Math.sin(i*2*Math.PI/numOfFans)
         ));
     }
-    xCenter = 0.0;
-    yCenter = -0.85;
+    xFrogCenter = 0.0;
+    yFrogCenter = 0.925;
     ///////////////// Good Muffin //////////////////////
     vertices.push(vec2(0.0, 1.0));
     vertices.push(vec2(0.0, 0.9));
@@ -108,6 +133,28 @@ function animate(){
 
 }
 
+function moveFrog(){
+    document.addEventListener('keydown', function(event) {
+    // "ArrowRight", "ArrowLeft", "ArrowUp", or "ArrowDown"
+    switch (event.key) {
+        case "ArrowLeft":
+            // Left pressed - move frog left
+            xFrogMove += ( xFrogMove > -10 ? -1 : 0);
+            break;
+        case "ArrowRight":
+            // Right pressed - move frog right
+            xFrogMove += ( xFrogMove < 10 ? 1 : 0);
+            break;
+        case "ArrowUp":
+            // Up pressed
+            break;
+        case "ArrowDown":
+            // Down pressed
+            break;
+    }
+    });
+}
+
 function goodMuffin(){
 
 }
@@ -116,24 +163,50 @@ function badMuffin(){
 
 }
 
+function ShowRules() {
+	var rString = "1.To move frog left and right, use left and right arrow keys<br/>2.To eat a muffin, position frog such that falling muffin hits frog<br/>3.If frog eats burnt muffin, a life is lost.<br/>4.If frog eats good muffin, points are gained.<br/>5.Get as many points possible until all lives are lost.<br/>Press 'Start' to play!<br/>";
+	Rules.innerHTML = rString;
+}
+
+function Start() {
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	ShowRules();
+}
+
+
+function drawScore(){
+    var string = currentScore.toString();
+    Score.innerHTML = string;
+}
+
 function render(){
     gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.clearColor(0.8, 0.8, 0.8, 1.0);
+
     // Frog //
-    gl.uniform2fv (u_vCenterLoc, vec2(xCenter, yCenter));
+    xFrogCenter = (xFrogMove * 0.1);
+    gl.uniform2fv (u_vCenterLoc, vec2(xFrogCenter, yFrogCenter));
     gl.uniform3fv(u_ColorLoc, colors[0]);
     gl.drawArrays( gl.TRIANGLE_FAN, 0, numOfFans + 2 );
 
     // Good Muffin //
-    //xBase = (go * 0.1); /// for moving object
-    ///gl.uniform2fv (u_vCenterLoc, vec2(xBase, 0.95));
+    yGood = 0.925;
+    gl.uniform2fv (u_vCenterLoc, vec2(xGood, yGood));
     gl.uniform3fv(u_ColorLoc, colors[1]);
     gl.drawArrays( gl.TRIANGLE_FAN, 38, 4 );
 
     // Bad Muffin //
+    yBad = 0.925;
+    gl.uniform2fv (u_vCenterLoc, vec2(xBad, yBad));
     gl.uniform3fv(u_ColorLoc, colors[1]);
     gl.drawArrays( gl.TRIANGLE_FAN, 42, 4 );
 
     // Grass //
+    gl.uniform2fv (u_vCenterLoc, vec2(0.0, 0.925));
     gl.uniform3fv(u_ColorLoc, colors[1]);
     gl.drawArrays( gl.TRIANGLE_FAN, 46, 4 );
+
+    drawScore();
+
+    window.requestAnimFrame(render);
 }
