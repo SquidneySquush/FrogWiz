@@ -17,6 +17,7 @@ var xGood = 0.0;
 var yGood = 0.0;
 var xBad = 0.0;
 var yBad = 0.0;
+var xGVel, yGVel, xBVel, yBVel;
 
 var Score;
 var currentScore; 
@@ -29,6 +30,9 @@ var bulletStat;
 
 var Rules;
 var StartButton;
+
+var currentLives;
+var lives;
 
 // bounce invader
 var xVelocity, yVelocity;
@@ -43,6 +47,7 @@ window.onload = function init(){
     Score = document.getElementById("Score");
     Rules = document.getElementById("Rules");
 	StartButton = document.getElementById("Start");
+    lives = document.getElementById("lives");
 
 
     gl = WebGLUtils.setupWebGL( canvas );
@@ -51,6 +56,7 @@ window.onload = function init(){
     setup();
 
     currentScore = 0;
+    currentLives = 3;
 
     //  Configure WebGL
     gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -127,10 +133,22 @@ function setup(){
             vec3(1.0, 0.4, 0.4), // base - red
             vec3(0.2, 0.2, 0.2) //bullet - black
             ];
+
+    yGood = 0.925;
+    yBad = 0.925;
+
+    xGVel = 0.000;
+    yGVel = -0.005;
+    xBVel = 0.000;
+    yBVel = -0.0075;
 }
 
 function animate(){
+    xGood += xGVel;
+    yGood += yGVel;
 
+    xBad += xBVel;
+    yBad += yBVel;
 }
 
 function moveFrog(){
@@ -156,11 +174,35 @@ function moveFrog(){
 }
 
 function goodMuffin(){
-
+    if (yGood<= (-0.775)){
+        if((xGood >= (xFrogCenter - 0.1)) && (xGood <= (xFrogCenter + 0.1))){
+            currentScore += 100;
+            yGood = 0.925;
+            // TODO: 
+            xGood = Math.random() - Math.random();
+         }
+    }
+    if (yGood<= (-1.0)){
+        yGood = 0.925;
+            // TODO: 
+        xGood = Math.random() - Math.random();
+    }
 }
 
 function badMuffin(){
-
+    if (yBad<= (-0.775)){
+        if((xBad >= (xFrogCenter - 0.1)) && (xBad <= (xFrogCenter + 0.1))){
+            currentLives -= 1;
+            yBad = 0.925;
+            // TODO: 
+            xBad = Math.random() - Math.random();
+         }
+    }
+    if (yBad<= (-1.0)){
+        yBad = 0.925;
+            // TODO: 
+        xBad = Math.random() - Math.random();
+    }
 }
 
 function ShowRules() {
@@ -179,10 +221,16 @@ function drawScore(){
     Score.innerHTML = string;
 }
 
+function drawLives(){
+    var string = currentLives.toString();
+    lives.innerHTML = string;
+}
+
 function render(){
     gl.clear( gl.COLOR_BUFFER_BIT );
     gl.clearColor(0.8, 0.8, 0.8, 1.0);
 
+    animate();
     // Frog //
     xFrogCenter = (xFrogMove * 0.1);
     gl.uniform2fv (u_vCenterLoc, vec2(xFrogCenter, yFrogCenter));
@@ -190,15 +238,13 @@ function render(){
     gl.drawArrays( gl.TRIANGLE_FAN, 0, numOfFans + 2 );
 
     // Good Muffin //
-    yGood = 0.925;
     gl.uniform2fv (u_vCenterLoc, vec2(xGood, yGood));
     gl.uniform3fv(u_ColorLoc, colors[1]);
     gl.drawArrays( gl.TRIANGLE_FAN, 38, 4 );
 
     // Bad Muffin //
-    yBad = 0.925;
     gl.uniform2fv (u_vCenterLoc, vec2(xBad, yBad));
-    gl.uniform3fv(u_ColorLoc, colors[1]);
+    gl.uniform3fv(u_ColorLoc, colors[2]);
     gl.drawArrays( gl.TRIANGLE_FAN, 42, 4 );
 
     // Grass //
@@ -206,7 +252,15 @@ function render(){
     gl.uniform3fv(u_ColorLoc, colors[1]);
     gl.drawArrays( gl.TRIANGLE_FAN, 46, 4 );
 
+    goodMuffin();
+    badMuffin();
     drawScore();
+    drawLives();
 
-    window.requestAnimFrame(render);
+    if (currentLives >= 0){
+        window.requestAnimFrame(render);
+    }
+    else{
+        alert("Game Over!");
+    }
 }
