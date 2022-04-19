@@ -7,11 +7,11 @@
     <title>Frog Wizard</title>
 
     <script id="vertex-shader" type="x-shader/x-vertex">
-        attribute vec4 a_vPosition; uniform vec2 u_vCenter; void main() { gl_Position = vec4(a_vPosition.x + u_vCenter.x, a_vPosition.y + (u_vCenter.y-0.925), 0.0, 1.0); }
+        attribute vec4 a_vPosition; uniform vec2 u_vCenter; attribute vec2 a_TexCoord; varying vec2 v_fTexCoord; void main() { v_fTexCoord = a_TexCoord; gl_Position = vec4(a_vPosition.x + u_vCenter.x, a_vPosition.y + (u_vCenter.y-0.925), 0.0, 1.0); }
     </script>
 
     <script id="fragment-shader" type="x-shader/x-fragment">
-        precision mediump float; uniform vec3 u_Color; void main() { gl_FragColor = vec4( u_Color, 1.0 ); }
+        precision mediump float; uniform vec3 u_Color; varying vec2 v_fTexCoord; uniform sampler2D u_TextureSampler; void main() { gl_FragColor = vec4( u_Color, 1.0 )*texture2D(u_TextureSampler,v_fTexCoord); }
     </script>
 
     <script type="text/javascript" src="./Common/webgl-utils.js"></script>
