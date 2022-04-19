@@ -19,9 +19,14 @@ var yGood = 0.94;
 var xBad = -0.06;
 var yBad = 0.94;
 var xGVel, yGVel, xBVel, yBVel;
+var xGoodArr= [];
+var yGoodArr = [];
+var xBadArr= [];
+var yBadArr = [];
 
 var Score;
 var currentScore;
+var Title;
 
 var Rules;
 var StartButton;
@@ -51,6 +56,7 @@ var TextureCoordBuffer;
 var ctMatrixLoc;
 var ctMatrix;
 
+var maxMuffins = 10;
 
 var GameOver = false;
 var inAir = false;
@@ -76,6 +82,7 @@ window.onload = function init() {
     Rules = document.getElementById("Rules");
     StartButton = document.getElementById("Start");
     lives = document.getElementById("lives");
+    Title = document.getElementById("Title");
 
 
     gl = WebGLUtils.setupWebGL(canvas);
@@ -131,11 +138,13 @@ window.onload = function init() {
     initTexture("./goodMuffin.png");
     initTexture("./badMuffin.png");
     initTexture("./grass.png");
+    initTexture("./WizardFrog.png");
     moveFrog();
 
     document.getElementById("Start").onclick = function() {
         render();
         Rules.innerHTML = "";
+        Title.innerHTML = "";
         StartButton.style.visibility = "hidden";
     }
 
@@ -149,19 +158,24 @@ function render(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-    animate();
     drawFrog();
-    drawGoodMuffin();
-    drawBadMuffin();
-    drawGrass();
+    var mufCount = Math.floor(currentScore/200);
+    for(var i = 0; i <= mufCount; i++){
+        animate(i);
 
-    goodMuffinCheck();
-    badMuffinCheck();
+        drawGoodMuffin(i);
+        drawBadMuffin(i);
+        
+        goodMuffinCheck(i);
+        badMuffinCheck(i);
+    }
+
+    drawGrass();
 
     drawScore();
     drawLives();
 
-    if (currentLives >= 0) {
+    if (currentLives > 0) {
         window.requestAnimFrame(render);
     } else {
         alert("Game Over!");
@@ -209,6 +223,14 @@ function setup() {
     // vertices.push(vec2(1.0, -1.0));
     // vertices.push(vec2(1.0, -0.925));
 
+    for(var i= 0; i < maxMuffins; i++){
+        xGoodArr.push(xGood);
+        yGoodArr.push(yGood);
+
+        xBadArr.push(xBad);
+        yBadArr.push(yBad);
+    }
+
     colors = [vec4(1.0, 1.0, 1.0, 1.0) // invader color - blue
     ];
     xGVel = 0.000;
@@ -217,35 +239,35 @@ function setup() {
     yBVel = -0.0075;
 }
 
-function goodMuffinCheck() {
-    if (yGood <= (-0.775)) {
-        if ((xGood >= (xFrogCenter - 0.1)) && (xGood <= (xFrogCenter + 0.1))) {
+function goodMuffinCheck(index) {
+    if ((yGoodArr[index]-0.015) <= (yFrogCenter)){//-0.775)) {
+        if ((xGoodArr[index] >= (xFrogCenter - 0.15)) && (xGoodArr[index] <= (xFrogCenter + 0.15))) {
             currentScore += 100;
-            yGood = 0.925;
+            yGoodArr[index] = 0.925;
             // TODO: 
-            xGood = Math.random() - Math.random();
+            xGoodArr[index] = Math.random() - Math.random();
         }
     }
-    if (yGood <= (-1.0)) {
-        yGood = 0.925;
+    if (yGoodArr[index] <= (-1.0)) {
+        yGoodArr[index] = 0.925;
         // TODO: 
-        xGood = Math.random() - Math.random();
+        xGoodArr[index] = Math.random() - Math.random();
     }
 }
 
-function badMuffinCheck() {
-    if (yBad <= (-0.775)) {
-        if ((xBad >= (xFrogCenter - 0.1)) && (xBad <= (xFrogCenter + 0.1))) {
+function badMuffinCheck(index) {
+    if ((yBadArr[index]-0.015) <= (yFrogCenter)){//(-0.775)) {
+        if ((xBadArr[index] >= (xFrogCenter - 0.15)) && (xBadArr[index] <= (xFrogCenter + 0.15))) {
             currentLives -= 1;
-            yBad = 0.925;
+            yBadArr[index] = 0.925;
             // TODO: 
-            xBad = Math.random() - Math.random();
+            xBadArr[index] = Math.random() - Math.random();
         }
     }
-    if (yBad <= (-1.0)) {
-        yBad = 0.925;
+    if (yBadArr[index] <= (-1.0)) {
+        yBadArr[index] = 0.925;
         // TODO: 
-        xBad = Math.random() - Math.random();
+        xBadArr[index] = Math.random() - Math.random();
     }
 }
 
@@ -253,8 +275,11 @@ function drawFrog(){
     xFrogCenter = (xFrogMove * 0.05);
     frogJump(arrowUp);
 
-    handleLoadedTexture(textures[0]);
-
+    if ( currentScore < 100){ 
+        handleLoadedTexture(textures[0]);
+    } else{
+        handleLoadedTexture(textures[4]);
+    }
     // makeTextCanvas(textures[0], 100, 100);
     // gl.enableVertexAttribArray(a_TextureCoordLoc);
     // gl.vertexAttribPointer(a_TextureCoordLoc, 2, gl.FLOAT, false, 0, 0);
@@ -278,10 +303,7 @@ function drawFrog(){
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
 
-function drawGoodMuffin(){
-    
-
-
+function drawGoodMuffin(index){
     gl.uniform4fv(u_ColorLoc, colors[0]);
 
     gl.enableVertexAttribArray(a_vPositionLoc);
@@ -292,13 +314,13 @@ function drawGoodMuffin(){
     ctMatrix = mat4();
     // translate muffin to moved position
     
-    ctMatrix = mult(translate(xGood,yGood, 0.0), ctMatrix);
+    ctMatrix = mult(translate(xGoodArr[index],yGoodArr[index], 0.0), ctMatrix);
     gl.uniformMatrix4fv( ctMatrixLoc, false, flatten(ctMatrix));
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
 
-function drawBadMuffin(){
+function drawBadMuffin(index){
     gl.uniform4fv(u_ColorLoc, colors[0]);
 
     gl.enableVertexAttribArray(a_vPositionLoc);
@@ -309,7 +331,7 @@ function drawBadMuffin(){
     ctMatrix = mat4();
     // translate muffin to moved position
     
-    ctMatrix = mult(translate(xBad,yBad, 0.0), ctMatrix);
+    ctMatrix = mult(translate(xBadArr[index],yBadArr[index], 0.0), ctMatrix);
     gl.uniformMatrix4fv( ctMatrixLoc, false, flatten(ctMatrix));
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
@@ -363,12 +385,12 @@ function initTexture(textID) {
 
 }
 
-function animate() {
-    xGood += xGVel;
-    yGood += yGVel;
+function animate(index) {
+    xGoodArr[index] += xGVel;
+    yGoodArr[index] += yGVel;
 
-    xBad += xBVel;
-    yBad += yBVel;
+    xBadArr[index] += xBVel;
+    yBadArr[index] += yBVel;
 }
 
 function moveFrog() {
@@ -439,7 +461,9 @@ function frogJump(upPress){
 }
 
 function ShowRules() {
-    var rString = "1.To move frog left and right, use left and right arrow keys<br/>2.To eat a muffin, position frog such that falling muffin hits frog<br/>3.If frog eats burnt muffin, a life is lost.<br/>4.If frog eats good muffin, points are gained.<br/>5.Get as many points possible until all lives are lost.<br/>Press 'Start' to play!<br/>";
+    var tString = "Frog Wizard";
+    Title.innerHTML = tString;
+    var rString = "1.To move frog left and right, use left and right arrow keys<br/>2.Use up arrow key to jump<br/>3.To eat a muffin, position frog such that falling<br/> muffin hits frog<br/>4.If frog eats burnt muffin, a life is lost.<br/>5.If frog eats good muffin, points are gained.<br/>6.Get as many points possible until all lives are lost.<br/>Press 'Start' to play!<br/>";
     Rules.innerHTML = rString;
 }
 
