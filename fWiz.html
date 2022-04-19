@@ -2,22 +2,42 @@
 <html>
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 
-    <title>Frog Wizard</title>
+<title>Frog Wizard</title>
 
-    <script id="vertex-shader" type="x-shader/x-vertex">
-        attribute vec4 a_vPosition; uniform vec2 u_vCenter; void main() { gl_Position = vec4(a_vPosition.x + u_vCenter.x, a_vPosition.y + (u_vCenter.y-0.925), 0.0, 1.0); }
-    </script>
+<script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec4 a_vPosition; 
+    //uniform vec2 u_vCenter; 
+    attribute vec2 a_TexCoord; 
+    varying vec2 v_fTexCoord; 
 
-    <script id="fragment-shader" type="x-shader/x-fragment">
-        precision mediump float; uniform vec3 u_Color; void main() { gl_FragColor = vec4( u_Color, 1.0 ); }
-    </script>
+    uniform mat4 ctMatrix;
+    uniform mat4 u_projectionMatrix;
 
-    <script type="text/javascript" src="./Common/webgl-utils.js"></script>
-    <script type="text/javascript" src="./Common/initShaders.js"></script>
-    <script type="text/javascript" src="./Common/MV.js"></script>
-    <script type="text/javascript" src="fWiz.js"></script>
+    void main() 
+    { 
+        v_fTexCoord = a_TexCoord; 
+        gl_Position = u_projectionMatrix * ctMatrix *a_vPosition;
+        //gl_Position = u_projectionMatrix *vec4(a_vPosition.x + u_vCenter.x, a_vPosition.y + (u_vCenter.y-0.925), 0.0, 1.0); 
+    }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float; 
+    //uniform vec3 u_Color; 
+    varying vec2 v_fTexCoord; 
+    uniform sampler2D u_TextureSampler; 
+    void main() 
+    { 
+        gl_FragColor = texture2D(u_TextureSampler,v_fTexCoord); 
+    }
+</script>
+
+<script type="text/javascript" src="./Common/webgl-utils.js"></script>
+<script type="text/javascript" src="./Common/initShaders.js"></script>
+<script type="text/javascript" src="./Common/MV.js"></script>
+<script type="text/javascript" src="fWiz.js"></script>
 </head>
 
 <body>
@@ -25,10 +45,10 @@
     <canvas id="gl-canvas" width="512" height="512" style="position:absolute;">
         Oops ... your browser doesn't support the HTML5 canvas element
         </canvas>
-    <div style="position: absolute; z-index: 10; pointer-events: none; left: 12px; top: 10px;">
+    <div style="position: absolute; z-index: 10; pointer-events: none; left: 12px; top: 10px; color:white;">
         <span id="Score"></span>
     </div>
-    <div style="position: absolute; z-index: 10; pointer-events: none; left: 500px; top: 10px;">
+    <div style="position: absolute; z-index: 10; pointer-events: none; left: 460px; top: 10px; color:white;">
         <span id="lives"></span>
     </div>
     <div style="position: absolute; z-index: 10; left: 80px; top: 150px; color:white;">
