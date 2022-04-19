@@ -13,7 +13,6 @@ var program;
 //var go = 0;
 var xFrogMove = 0.0;
 var u_xMoveLoc;
-var xFrogCenter = 0.0;
 
 var xGood = 0.06;
 var yGood = 0.94;
@@ -34,15 +33,12 @@ var lives;
 var xVelocity, yVelocity;
 var xCenter, yCenter;
 var xFrogCenter, yFrogCenter;
+var xFrogVel, yFrogVel = 0.0;
 var u_vCenterLoc;
 var a_vPositionLoc;
 var vBuffer;
 
 var projectionMatrix, u_projectionMatrixLoc;
-var  fovy = 45.0;
-var  aspect = 1.0;
-var near = 0.1;
-var far = 10.0;
 
 var a_TextureCoordLoc;
 var u_TextureSamplerLoc;
@@ -57,6 +53,9 @@ var ctMatrix;
 
 
 var GameOver = false;
+var inAir = false;
+var arrowUp = false;
+var jumpDown = false;
 
 // var textCtx = document.createElement("canvas").getContext("2d");
 
@@ -251,7 +250,8 @@ function badMuffinCheck() {
 }
 
 function drawFrog(){
-    xFrogCenter = (xFrogMove * 0.1);
+    xFrogCenter = (xFrogMove * 0.05);
+    frogJump(arrowUp);
 
     handleLoadedTexture(textures[0]);
 
@@ -377,20 +377,65 @@ function moveFrog() {
         switch (event.key) {
             case "ArrowLeft":
                 // Left pressed - move frog left
-                xFrogMove += (xFrogMove > -10 ? -1 : 0);
+                xFrogMove += (xFrogMove > -20 ? -1 : 0);
                 break;
             case "ArrowRight":
                 // Right pressed - move frog right
-                xFrogMove += (xFrogMove < 10 ? 1 : 0);
+                xFrogMove += (xFrogMove < 20 ? 1 : 0);
                 break;
             case "ArrowUp":
-                // Up pressed
+                // Up pressed - make frog jump
+                if (inAir == false){
+                    arrowUp = true;
+                }
+
                 break;
             case "ArrowDown":
                 // Down pressed
                 break;
         }
     });
+}
+
+function frogJump(upPress){
+    if(upPress ==true  && inAir == false){
+        yFrogVel += 0.01;
+        inAir == true; 
+        
+    }
+    // xFrogCenter += xFrogVel;
+    // yFrogCenter += yFrogVel;
+    // yFrogVel *= 0.9;
+    // console.log(yFrogVel);
+
+
+    if(yFrogCenter >= (-0.3)){
+        jumpDown = true;
+        
+        console.log(yFrogCenter);
+    }
+    if(jumpDown == false){
+        yFrogCenter += yFrogVel;
+        yFrogVel *= 0.8;
+    }
+    else{
+        yFrogCenter -= yFrogVel;
+        console.log("down");
+        yFrogVel *= 0.8;
+
+    }
+    if (yFrogCenter <= -0.8 ){
+        console.log("back in place");
+        console.log(yFrogCenter);
+        yFrogVel = 0.0;
+        yFrogCenter = -0.8;
+        inAir = false;
+        jumpDown = false;
+        arrowUp = false;
+        // console.log(yFrogCenter);
+    }
+
+    // arrowUp = false;
 }
 
 function ShowRules() {
