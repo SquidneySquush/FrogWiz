@@ -222,7 +222,7 @@ function setup() {
 }
 
 function goodMuffinCheck(index) {
-    if ((yGoodArr[index]-0.1) <= (yFrogCenter)){//-0.775)) {
+    if ((yGoodArr[index]-0.1) <= (yFrogCenter)){
         if ((xGoodArr[index] >= (xFrogCenter - 0.15)) && (xGoodArr[index] <= (xFrogCenter + 0.15))) {
             currentScore += 100;
             if(currentScore == 100||currentScore%500 == 0){
@@ -252,7 +252,7 @@ function badMuffinCheck(index) {
     }
 }
 function FlyCheck() {
-    if ((yFly - 0.015) <= (yFrogCenter)) {//(-0.775)) {
+    if ((yFly - 0.015) <= (yFrogCenter)) {
         if ((xFly >= (xFrogCenter - 0.15)) && (xFly <= (xFrogCenter + 0.15))) {
             if(currentLives < 3){
                 currentLives += 1;
