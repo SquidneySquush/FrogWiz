@@ -7,6 +7,13 @@ var numOfFans = 36;
 var colors;
 var u_ColorLoc;
 var program;
+var RulesAudio;
+var GameAudio;
+var GoodAudio;
+var WizardAudio;
+var BadAudio;
+var JumpAudio;
+var LoseAudio;
 
 
 // Move base variables
@@ -62,6 +69,7 @@ var GameOver = false;
 var inAir = false;
 var arrowUp = false;
 var jumpDown = false;
+var Wizardplay = false;
 
 // var textCtx = document.createElement("canvas").getContext("2d");
 
@@ -139,13 +147,23 @@ window.onload = function init() {
     initTexture("./badMuffin.png");
     initTexture("./grass.png");
     initTexture("./WizardFrog.png");
+    RulesAudio = new Audio("./background_rules.mp3");
+    GameAudio = new Audio("./background_game.mp3");
+    GoodAudio = new Audio("./coin.mp3");
+    WizardAudio = new Audio("./youre-a-wizard.mp3");
+    BadAudio = new Audio("./ew.mp3");
+    JumpAudio = new Audio("./jump.mp3");
+    LoseAudio = new Audio("./damage.mp3");
     moveFrog();
 
     document.getElementById("Start").onclick = function() {
+        RulesAudio.pause();
         render();
         Rules.innerHTML = "";
         Title.innerHTML = "";
         StartButton.style.visibility = "hidden";
+        GameAudio.loop=true;
+        GameAudio.play();
     }
 
     Start();
@@ -158,6 +176,12 @@ function render(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    //if(currentScore == 100){
+       // WizardAudio.play();
+    //}
     drawFrog();
     var mufCount = Math.floor(currentScore/200);
     for(var i = 0; i <= mufCount; i++){
@@ -178,6 +202,8 @@ function render(){
     if (currentLives > 0) {
         window.requestAnimFrame(render);
     } else {
+        GameAudio.pause();
+        LoseAudio.play();
         alert("Game Over!");
     }
 }
@@ -242,6 +268,7 @@ function setup() {
 function goodMuffinCheck(index) {
     if ((yGoodArr[index]-0.015) <= (yFrogCenter)){//-0.775)) {
         if ((xGoodArr[index] >= (xFrogCenter - 0.15)) && (xGoodArr[index] <= (xFrogCenter + 0.15))) {
+            //GoodAudio.play();
             currentScore += 100;
             yGoodArr[index] = 0.925;
             // TODO: 
@@ -258,6 +285,7 @@ function goodMuffinCheck(index) {
 function badMuffinCheck(index) {
     if ((yBadArr[index]-0.015) <= (yFrogCenter)){//(-0.775)) {
         if ((xBadArr[index] >= (xFrogCenter - 0.15)) && (xBadArr[index] <= (xFrogCenter + 0.15))) {
+            //BadAudio.play();
             currentLives -= 1;
             yBadArr[index] = 0.925;
             // TODO: 
@@ -279,6 +307,10 @@ function drawFrog(){
         handleLoadedTexture(textures[0]);
     } else{
         handleLoadedTexture(textures[4]);
+        if(Wizardplay == false){
+            WizardAudio.play();
+            Wizardplay = true;
+        }
     }
     // makeTextCanvas(textures[0], 100, 100);
     // gl.enableVertexAttribArray(a_TextureCoordLoc);
@@ -363,7 +395,7 @@ function handleLoadedTexture(texture) {
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, texture.image);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     //gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -380,9 +412,15 @@ function handleLoadedTexture(texture) {
 function initTexture(textID) {
     var texture = gl.createTexture();
     texture.image = new Image();
+    requestCORSIfNotSameOrigin(texture,textID);
     texture.image.src = textID;
     textures.push(texture);
 
+}
+function requestCORSIfNotSameOrigin(img, url) {
+    if ((new URL(url, window.location.href)).origin !== window.location.origin) {
+        img.crossOrigin = "anonymous";
+    }
 }
 
 function animate(index) {
@@ -409,6 +447,7 @@ function moveFrog() {
                 // Up pressed - make frog jump
                 if (inAir == false){
                     arrowUp = true;
+                    JumpAudio.play();
                 }
 
                 break;
@@ -470,6 +509,8 @@ function ShowRules() {
 function Start() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     ShowRules();
+    RulesAudio.loop=true;
+    RulesAudio.play();
 }
 
 
